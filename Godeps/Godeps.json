@@ -1,0 +1,10 @@
+{
+	"ImportPath": "github.com/intelsdi-x/pulse-plugin-collector-pcm",
+	"GoVersion": "go1.4.2",
+	"Deps": [
+		{
+			"ImportPath": "github.com/intelsdi-x/pulse",
+			"Rev": "544d1d673afb6b7e6f2f07331da79fb4de143d7e"
+		}
+	]
+}
