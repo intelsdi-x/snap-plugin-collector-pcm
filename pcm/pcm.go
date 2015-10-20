@@ -38,7 +38,7 @@ const (
 	// Name of plugin
 	name = "pcm"
 	// Version of plugin
-	version = 2
+	version = 3
 	// Type of plugin
 	pluginType = plugin.CollectorPluginType
 )
@@ -83,7 +83,7 @@ func (p *PCM) CollectMetrics(mts []plugin.PluginMetricType) ([]plugin.PluginMetr
 }
 
 // GetMetricTypes returns the metric types exposed by pcm
-func (p *PCM) GetMetricTypes() ([]plugin.PluginMetricType, error) {
+func (p *PCM) GetMetricTypes(_ plugin.PluginConfigType) ([]plugin.PluginMetricType, error) {
 	mts := make([]plugin.PluginMetricType, len(p.keys))
 	p.mutex.RLock()
 	defer p.mutex.RUnlock()
