@@ -4,7 +4,7 @@
 /*
 http://www.apache.org/licenses/LICENSE-2.0.txt
 
-Copyright 2015 Intel Coporation
+Copyright 2015 Intel Corporation
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ func TestPCMPlugin(t *testing.T) {
 		Convey("So err should be nil", func() {
 			So(err, ShouldBeNil)
 		})
-		Convey("So pcmCol should be of Psutil type", func() {
+		Convey("So pcmCol should be of PCM type", func() {
 			So(pcmCol, ShouldHaveSameTypeAs, &PCM{})
 		})
 		configPolicy, err := pcmCol.GetConfigPolicy()

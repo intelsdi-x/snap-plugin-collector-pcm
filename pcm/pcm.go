@@ -2,7 +2,7 @@
 http://www.apache.org/licenses/LICENSE-2.0.txt
 
 
-Copyright 2015 Intel Coporation
+Copyright 2015 Intel Corporation
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ const (
 	// Name of plugin
 	name = "pcm"
 	// Version of plugin
-	version = 2
+	version = 3
 	// Type of plugin
 	pluginType = plugin.CollectorPluginType
 )
@@ -83,7 +83,7 @@ func (p *PCM) CollectMetrics(mts []plugin.PluginMetricType) ([]plugin.PluginMetr
 }
 
 // GetMetricTypes returns the metric types exposed by pcm
-func (p *PCM) GetMetricTypes() ([]plugin.PluginMetricType, error) {
+func (p *PCM) GetMetricTypes(_ plugin.PluginConfigType) ([]plugin.PluginMetricType, error) {
 	mts := make([]plugin.PluginMetricType, len(p.keys))
 	p.mutex.RLock()
 	defer p.mutex.RUnlock()
