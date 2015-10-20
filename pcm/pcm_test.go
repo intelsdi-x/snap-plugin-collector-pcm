@@ -45,7 +45,7 @@ func TestPCMPlugin(t *testing.T) {
 		Convey("So err should be nil", func() {
 			So(err, ShouldBeNil)
 		})
-		Convey("So pcmCol should be of Psutil type", func() {
+		Convey("So pcmCol should be of PCM type", func() {
 			So(pcmCol, ShouldHaveSameTypeAs, &PCM{})
 		})
 		configPolicy, err := pcmCol.GetConfigPolicy()
