@@ -30,8 +30,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/intelsdi-x/pulse/control/plugin"
-	"github.com/intelsdi-x/pulse/control/plugin/cpolicy"
+	"github.com/intelsdi-x/snap/control/plugin"
+	"github.com/intelsdi-x/snap/control/plugin/cpolicy"
 )
 
 const (
@@ -44,7 +44,7 @@ const (
 )
 
 func Meta() *plugin.PluginMeta {
-	return plugin.NewPluginMeta(name, version, pluginType, []string{plugin.PulseGOBContentType}, []string{plugin.PulseGOBContentType})
+	return plugin.NewPluginMeta(name, version, pluginType, []string{plugin.SnapGOBContentType}, []string{plugin.SnapGOBContentType})
 }
 
 // PCM
@@ -102,12 +102,12 @@ func (p *PCM) GetConfigPolicy() (*cpolicy.ConfigPolicy, error) {
 func NewPCMCollector() (*PCM, error) {
 	pcm := &PCM{mutex: &sync.RWMutex{}, data: map[string]interface{}{}}
 	var cmd *exec.Cmd
-	if path := os.Getenv("PULSE_PCM_PATH"); path != "" {
+	if path := os.Getenv("SNAP_PCM_PATH"); path != "" {
 		cmd = exec.Command(filepath.Join(path, "pcm.x"), "/csv", "-nc", "-r", "1")
 	} else {
 		c, err := exec.LookPath("pcm.x")
 		if err != nil {
-			fmt.Fprint(os.Stderr, "Unable to find PCM.  Ensure it's in your path or set PULSE_PCM_PATH.")
+			fmt.Fprint(os.Stderr, "Unable to find PCM.  Ensure it's in your path or set SNAP_PCM_PATH.")
 			panic(err)
 		}
 		cmd = exec.Command(c, "/csv", "-nc", "-r", "1")
