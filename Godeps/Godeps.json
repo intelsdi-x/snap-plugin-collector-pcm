@@ -1,11 +1,11 @@
 {
-	"ImportPath": "github.com/intelsdi-x/pulse-plugin-collector-pcm",
+	"ImportPath": "github.com/intelsdi-x/snap-plugin-collector-pcm",
 	"GoVersion": "go1.4.2",
 	"Deps": [
 		{
-			"ImportPath": "github.com/intelsdi-x/pulse",
-			"Comment": "v0.8.0-beta",
-			"Rev": "de2881352745c206284b74f4ef1165ba4510971a"
+			"Comment": "pulse2snap",
+			"ImportPath": "github.com/intelsdi-x/snap",
+			"Rev": "0c65a1359589a71aded24150402627210efb70d2"
 		}
 	]
 }
