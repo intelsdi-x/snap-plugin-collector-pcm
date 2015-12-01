@@ -38,7 +38,7 @@ const (
 	// Name of plugin
 	name = "pcm"
 	// Version of plugin
-	version = 4
+	version = 5
 	// Type of plugin
 	pluginType = plugin.CollectorPluginType
 )
@@ -133,7 +133,8 @@ func NewPCMCollector() (*PCM, error) {
 				//skip the date and time fields
 				pcm.keys = make([]string, len(keys[2:]))
 				for i, k := range keys[2:] {
-					pcm.keys[i] = fmt.Sprintf("/intel/pcm/%s", k)
+					// removes all spaces from metric key
+					pcm.keys[i] = fmt.Sprintf("/intel/pcm/%s", strings.Replace(k, " ", "", -1))
 				}
 				pcm.mutex.Unlock()
 				continue
@@ -146,7 +147,8 @@ func NewPCMCollector() (*PCM, error) {
 				if err == nil {
 					pcm.data[pcm.keys[i]] = v
 				} else {
-					panic(err)
+					fmt.Fprintln(os.Stderr, "Invalid metric value", err)
+					pcm.data[pcm.keys[i]] = nil
 				}
 			}
 			pcm.mutex.Unlock()
