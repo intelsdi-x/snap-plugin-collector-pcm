@@ -1,0 +1,48 @@
+{
+    "version": 1,
+    "schedule": {
+        "type": "simple",
+        "interval": "1s"
+    },
+    "workflow": {
+        "collect": {
+            "metrics": {
+                "/intel/pcm/IPC": {},
+                "/intel/pcm/L2HIT": {},
+                "/intel/pcm/L2MISS": {},
+                "/intel/pcm/EXEC": {},
+                "/intel/pcm/FREQ": {},
+                "/intel/pcm/INST": {},
+                "/intel/pcm/INSTnom": {},
+                "/intel/pcm/INSTnom%": {},
+                "/intel/pcm/L3HIT": {},
+                "/intel/pcm/L3MISS": {},
+                "/intel/pcm/PhysIPC": {},
+                "/intel/pcm/PhysIPC%": {},
+                "/intel/pcm/ProcEnergy(Joules)": {},
+                "/intel/pcm/READ": {},
+                "/intel/pcm/SKT0": {},
+                "/intel/pcm/TEMP": {},
+                "/intel/pcm/TIME(ticks)": {},
+                "/intel/pcm/WRITE": {}
+            },
+            "config": {
+                "/intel/pcm": {
+                    "user": "root",
+                    "password": "secret"
+                }
+            },
+            "process": null,
+            "publish": [
+                {
+                    "plugin_name": "file",
+                    "plugin_version": 3,
+                    "config": {
+                        "file": "/tmp/published_pcm"
+                    }
+                }
+            ]
+        }
+    }
+}
+
