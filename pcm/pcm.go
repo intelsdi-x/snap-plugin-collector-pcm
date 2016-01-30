@@ -38,7 +38,7 @@ const (
 	// Name of plugin
 	name = "pcm"
 	// Version of plugin
-	version = 6
+	version = 7
 	// Type of plugin
 	pluginType = plugin.CollectorPluginType
 )
