@@ -19,11 +19,11 @@
                 "/intel/pcm/L3MISS": {},
                 "/intel/pcm/PhysIPC": {},
                 "/intel/pcm/PhysIPC%": {},
-                "/intel/pcm/ProcEnergy(Joules)": {},
+                "/intel/pcm/Proc_Energy_Joules": {},
                 "/intel/pcm/READ": {},
                 "/intel/pcm/SKT0": {},
                 "/intel/pcm/TEMP": {},
-                "/intel/pcm/TIME(ticks)": {},
+                "/intel/pcm/TIME_ticks": {},
                 "/intel/pcm/WRITE": {}
             },
             "config": {
@@ -36,7 +36,6 @@
             "publish": [
                 {
                     "plugin_name": "file",
-                    "plugin_version": 3,
                     "config": {
                         "file": "/tmp/published_pcm"
                     }

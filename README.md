@@ -96,11 +96,11 @@ Namespace | Description
 /intel/pcm/L3MPI|  L3 cache misses per instruction            
 /intel/pcm/PhysIPC| Instructions per cycle (IPC) multiplied by number of threads per core.    
 /intel/pcm/PhysIPC%| Instructions per cycle (IPC) multiplied by number of threads per core relative to maximum IPC.          
-/intel/pcm/ProcEnergy(Joules)| The energy consumed by the processor in Joules. Divide by the time to get the power consumption in watt
+/intel/pcm/Proc_Energy_Joules| The energy consumed by the processor in Joules. Divide by the time to get the power consumption in watt
 /intel/pcm/READ| Bytes read from memory controller in GBytes.
 /intel/pcm/SKT0| CPU energy in Joules per socket 0
 /intel/pcm/TEMP| Temperature reading in degree Celsius relative to the TjMax temperature (thermal headroom; max_design_temp - current_temp)
-/intel/pcm/TIME(ticks)| Number of invariant clockticks. This is invariant to turbo and power saving modes.
+/intel/pcm/TIME_ticks| Number of invariant clockticks. This is invariant to turbo and power saving modes.
 /intel/pcm/WRITE| Bytes written to memory controller in GBytes.
 
 Metrics exposed by "pcm" are system related and might be varied.
@@ -120,7 +120,7 @@ In another terminal window, load pcm plugin for collecting:
 $ snapctl plugin load $SNAP_PCM_PLUGIN_DIR/build/rootfs/snap-plugin-collector-pcm
 Plugin loaded
 Name: pcm
-Version: 6
+Version: 8
 Type: collector
 Signed: false
 Loaded Time: Wed, 02 Dec 2015 07:57:33 EST
@@ -164,11 +164,11 @@ Create a task JSON file (exemplary file in examples/tasks/pcm-file.json):
                 "/intel/pcm/L3MISS": {},
                 "/intel/pcm/PhysIPC": {},
                 "/intel/pcm/PhysIPC%": {},
-                "/intel/pcm/ProcEnergy(Joules)": {},
+                "/intel/pcm/Proc_Energy_Joules": {},
                 "/intel/pcm/READ": {},
                 "/intel/pcm/SKT0": {},
                 "/intel/pcm/TEMP": {},
-                "/intel/pcm/TIME(ticks)": {},
+                "/intel/pcm/TIME_ticks": {},
                 "/intel/pcm/WRITE": {}
             },
             "config": {
@@ -181,7 +181,6 @@ Create a task JSON file (exemplary file in examples/tasks/pcm-file.json):
             "publish": [
                 {
                     "plugin_name": "file",
-                    "plugin_version": 3,
                     "config": {
                         "file": "/tmp/published_pcm"
                     }
@@ -221,11 +220,11 @@ NAMESPACE                        DATA            TIMESTAMP                      
 /intel/pcm/L3MISS                0.415           2015-12-02 08:19:46.001144495 -0500 EST         gklab-108-166
 /intel/pcm/PhysIPC               4.33            2015-12-02 08:19:46.001145292 -0500 EST         gklab-108-166
 /intel/pcm/PhysIPC%              108             2015-12-02 08:19:46.001149828 -0500 EST         gklab-108-166
-/intel/pcm/ProcEnergy(Joules)    8.46            2015-12-02 08:19:46.001145857 -0500 EST         gklab-108-166
+/intel/pcm/Proc_Energy_Joules    8.46            2015-12-02 08:19:46.001145857 -0500 EST         gklab-108-166
 /intel/pcm/READ                  0.084           2015-12-02 08:19:46.00114662 -0500 EST          gklab-108-166
 /intel/pcm/SKT0                  8.46            2015-12-02 08:19:46.001152938 -0500 EST         gklab-108-166
 /intel/pcm/TEMP                  70              2015-12-02 08:19:46.001153401 -0500 EST         gklab-108-166
-/intel/pcm/TIME(ticks)           3430            2015-12-02 08:19:46.001153955 -0500 EST         gklab-108-166
+/intel/pcm/TIME_ticks           3430            2015-12-02 08:19:46.001153955 -0500 EST         gklab-108-166
 /intel/pcm/WRITE                 0.0563          2015-12-02 08:19:46.00114718 -0500 EST          gklab-108-166
 ```
 (Keys `ctrl+c` terminate task watcher)
