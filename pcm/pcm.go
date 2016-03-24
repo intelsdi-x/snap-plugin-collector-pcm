@@ -30,6 +30,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/intelsdi-x/snap-plugin-utilities/ns"
 	"github.com/intelsdi-x/snap/control/plugin"
 	"github.com/intelsdi-x/snap/control/plugin/cpolicy"
 )
@@ -38,7 +39,7 @@ const (
 	// Name of plugin
 	name = "pcm"
 	// Version of plugin
-	version = 7
+	version = 8
 	// Type of plugin
 	pluginType = plugin.CollectorPluginType
 )
@@ -134,7 +135,8 @@ func NewPCMCollector() (*PCM, error) {
 				pcm.keys = make([]string, len(keys[2:]))
 				for i, k := range keys[2:] {
 					// removes all spaces from metric key
-					pcm.keys[i] = fmt.Sprintf("/intel/pcm/%s", strings.Replace(k, " ", "", -1))
+					metricKey := ns.ReplaceNotAllowedCharsInNamespacePart(k)
+					pcm.keys[i] = fmt.Sprintf("/intel/pcm/%s", metricKey)
 				}
 				pcm.mutex.Unlock()
 				continue
