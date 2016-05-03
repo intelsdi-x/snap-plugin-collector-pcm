@@ -25,7 +25,7 @@ In order to use this plugin user is required to have PCM installed in system.
 ### System Requirements
 
 * [Intel PCM] (http://www.intel.com/software/pcm)
-* [golang 1.5+](https://golang.org/dl/)
+* [golang 1.5+](https://golang.org/dl/)  (needed only for building)
 * Root privileges (snapd has to be running with root privileges for ability to collect data from PCM)
  
 **Suggestions**
