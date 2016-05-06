@@ -33,6 +33,7 @@ import (
 	"github.com/intelsdi-x/snap-plugin-utilities/ns"
 	"github.com/intelsdi-x/snap/control/plugin"
 	"github.com/intelsdi-x/snap/control/plugin/cpolicy"
+	"github.com/intelsdi-x/snap/core"
 )
 
 const (
@@ -63,33 +64,27 @@ func (p *PCM) Data() map[string]interface{} {
 	return p.data
 }
 
-// CollectMetrics returns metrics from pcm
-func (p *PCM) CollectMetrics(mts []plugin.PluginMetricType) ([]plugin.PluginMetricType, error) {
-	metrics := make([]plugin.PluginMetricType, len(mts))
+// // CollectMetrics returns metrics from pcm
+func (p *PCM) CollectMetrics(mts []plugin.MetricType) ([]plugin.MetricType, error) {
 	p.mutex.RLock()
 	defer p.mutex.RUnlock()
-	hostname, _ := os.Hostname()
-	for i, m := range mts {
-		if v, ok := p.data[joinNamespace(m.Namespace())]; ok {
-			metrics[i] = plugin.PluginMetricType{
-				Namespace_: m.Namespace(),
-				Data_:      v,
-				Source_:    hostname,
-				Timestamp_: time.Now(),
-			}
+	for i := range mts {
+		if v, ok := p.data[mts[i].Namespace().String()]; ok {
+			mts[i].Data_ = v
+			mts[i].Timestamp_ = time.Now()
 		}
 	}
 	// fmt.Fprintf(os.Stderr, "collected >>> %+v\n", metrics)
-	return metrics, nil
+	return mts, nil
 }
 
 // GetMetricTypes returns the metric types exposed by pcm
-func (p *PCM) GetMetricTypes(_ plugin.PluginConfigType) ([]plugin.PluginMetricType, error) {
-	mts := make([]plugin.PluginMetricType, len(p.keys))
+func (p *PCM) GetMetricTypes(_ plugin.ConfigType) ([]plugin.MetricType, error) {
+	mts := make([]plugin.MetricType, len(p.keys))
 	p.mutex.RLock()
 	defer p.mutex.RUnlock()
 	for i, k := range p.keys {
-		mts[i] = plugin.PluginMetricType{Namespace_: strings.Split(strings.TrimPrefix(k, "/"), "/")}
+		mts[i] = plugin.MetricType{Namespace_: core.NewNamespace(strings.Split(strings.TrimPrefix(k, "/"), "/")...)}
 	}
 	return mts, nil
 }
@@ -187,8 +182,4 @@ func NewPCMCollector() (*PCM, error) {
 	// }
 
 	return pcm, nil
-}
-
-func joinNamespace(ns []string) string {
-	return "/" + strings.Join(ns, "/")
 }
