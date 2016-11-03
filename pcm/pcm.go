@@ -30,6 +30,10 @@ import (
 	"sync"
 	"time"
 
+	"io"
+
+	"math"
+
 	"github.com/intelsdi-x/snap-plugin-utilities/ns"
 	"github.com/intelsdi-x/snap/control/plugin"
 	"github.com/intelsdi-x/snap/control/plugin/cpolicy"
@@ -40,7 +44,7 @@ const (
 	// Name of plugin
 	name = "pcm"
 	// Version of plugin
-	version = 8
+	version = 9
 	// Type of plugin
 	pluginType = plugin.CollectorPluginType
 )
@@ -52,7 +56,7 @@ func Meta() *plugin.PluginMeta {
 // PCM
 type PCM struct {
 	keys  []string
-	data  map[string]interface{}
+	data  map[string]float64
 	mutex *sync.RWMutex
 }
 
@@ -60,7 +64,7 @@ func (p *PCM) Keys() []string {
 	return p.keys
 }
 
-func (p *PCM) Data() map[string]interface{} {
+func (p *PCM) Data() map[string]float64 {
 	return p.data
 }
 
@@ -96,7 +100,16 @@ func (p *PCM) GetConfigPolicy() (*cpolicy.ConfigPolicy, error) {
 }
 
 func NewPCMCollector() (*PCM, error) {
-	pcm := &PCM{mutex: &sync.RWMutex{}, data: map[string]interface{}{}}
+	pcm := &PCM{mutex: &sync.RWMutex{}, data: map[string]float64{}}
+
+	err := pcm.run()
+	if err != nil {
+		return nil, err
+	}
+
+	return pcm, nil
+}
+func (pcm *PCM) run() error {
 	var cmd *exec.Cmd
 	if path := os.Getenv("SNAP_PCM_PATH"); path != "" {
 		cmd = exec.Command(filepath.Join(path, "pcm.x"), "/csv", "-nc", "-r", "1")
@@ -111,53 +124,16 @@ func NewPCMCollector() (*PCM, error) {
 
 	cmdReader, err := cmd.StdoutPipe()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error creating StdoutPipe", err)
-		return nil, err
+		return fmt.Errorf("Error creating StdoutPipe %v", err)
 	}
-	// read the data from stdout
-	scanner := bufio.NewScanner(cmdReader)
-	go func() {
-		first := true
-		for scanner.Scan() {
-			if first {
-				first = false
-				continue
-			}
-			if len(pcm.keys) == 0 {
-				pcm.mutex.Lock()
-				keys := strings.Split(strings.TrimSuffix(scanner.Text(), ";"), ";")
-				//skip the date and time fields
-				pcm.keys = make([]string, len(keys[2:]))
-				for i, k := range keys[2:] {
-					// removes all spaces from metric key
-					metricKey := ns.ReplaceNotAllowedCharsInNamespacePart(k)
-					pcm.keys[i] = fmt.Sprintf("/intel/pcm/%s", metricKey)
-				}
-				pcm.mutex.Unlock()
-				continue
-			}
 
-			pcm.mutex.Lock()
-			datal := strings.Split(strings.TrimSuffix(scanner.Text(), ";"), ";")
-			for i, d := range datal[2:] {
-				v, err := strconv.ParseFloat(strings.TrimSpace(d), 64)
-				if err == nil {
-					pcm.data[pcm.keys[i]] = v
-				} else {
-					fmt.Fprintln(os.Stderr, "Invalid metric value", err)
-					pcm.data[pcm.keys[i]] = nil
-				}
-			}
-			pcm.mutex.Unlock()
-			// fmt.Fprintf(os.Stderr, "data >>> %+v\n", pcm.data)
-			// fmt.Fprintf(os.Stdout, "data >>> %+v\n", pcm.data)
-		}
+	go func() {
+		pcm.parse(cmdReader)
 	}()
 
 	err = cmd.Start()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error starting pcm", err)
-		return nil, err
+		return fmt.Errorf("Error starting pcm %v", err)
 	}
 
 	// we need to wait until we have our metric types
@@ -170,7 +146,7 @@ func NewPCMCollector() (*PCM, error) {
 			break
 		}
 		if time.Since(st) > time.Second*2 {
-			return nil, fmt.Errorf("Timed out waiting for metrics from pcm")
+			return fmt.Errorf("Timed out waiting for metrics from pcm")
 		}
 	}
 
@@ -181,5 +157,45 @@ func NewPCMCollector() (*PCM, error) {
 	// 	return nil, err
 	// }
 
-	return pcm, nil
+	return nil
+}
+
+func (pcm *PCM) parse(reader io.Reader) {
+	// read the data from stdout
+	scanner := bufio.NewScanner(reader)
+	first := true
+	for scanner.Scan() {
+		if first {
+			first = false
+			continue
+		}
+		if len(pcm.keys) == 0 {
+			pcm.mutex.Lock()
+			keys := strings.Split(strings.TrimSuffix(scanner.Text(), ";"), ";")
+			//skip the date and time fields
+			pcm.keys = make([]string, len(keys[2:]))
+			for i, k := range keys[2:] {
+				// removes all spaces from metric key
+				metricKey := ns.ReplaceNotAllowedCharsInNamespacePart(k)
+				pcm.keys[i] = fmt.Sprintf("/intel/pcm/%s", metricKey)
+			}
+			pcm.mutex.Unlock()
+			continue
+		}
+
+		pcm.mutex.Lock()
+		datal := strings.Split(strings.TrimSuffix(scanner.Text(), ";"), ";")
+		for i, d := range datal[2:] {
+			v, err := strconv.ParseFloat(strings.TrimSpace(d), 64)
+			if err == nil {
+				pcm.data[pcm.keys[i]] = v
+			} else {
+				fmt.Fprintln(os.Stderr, "Invalid metric value", err)
+				pcm.data[pcm.keys[i]] = math.NaN()
+			}
+		}
+		pcm.mutex.Unlock()
+		// fmt.Fprintf(os.Stderr, "data >>> %+v\n", pcm.data)
+		// fmt.Fprintf(os.Stdout, "data >>> %+v\n", pcm.data)
+	}
 }
