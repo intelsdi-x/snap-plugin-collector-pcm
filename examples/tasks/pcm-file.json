@@ -19,9 +19,7 @@
                 "/intel/pcm/L3MISS": {},
                 "/intel/pcm/PhysIPC": {},
                 "/intel/pcm/PhysIPC%": {},
-                "/intel/pcm/Proc_Energy_Joules": {},
                 "/intel/pcm/READ": {},
-                "/intel/pcm/SKT0": {},
                 "/intel/pcm/TEMP": {},
                 "/intel/pcm/TIME_ticks": {},
                 "/intel/pcm/WRITE": {}
@@ -35,7 +33,7 @@
             "process": null,
             "publish": [
                 {
-                    "plugin_name": "file",
+                    "plugin_name": "mock-file",
                     "config": {
                         "file": "/tmp/published_pcm"
                     }
