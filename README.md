@@ -25,8 +25,8 @@ In order to use this plugin user is required to have PCM installed in system.
 ### System Requirements
 
 * [Intel PCM] (http://www.intel.com/software/pcm)
-* [golang 1.5+](https://golang.org/dl/)  (needed only for building)
-* Root privileges (snapd has to be running with root privileges for ability to collect data from PCM)
+* [golang 1.6+](https://golang.org/dl/)  (needed only for building)
+* Root privileges (snapteld has to be running with root privileges for ability to collect data from PCM)
  
 **Suggestions**
 * To be able, to use PCM, [NMI watchdog](https://en.wikipedia.org/wiki/Non-maskable_interrupt) needs to be disabled. There are two ways to do this:
@@ -54,12 +54,9 @@ Build the plugin by running make within the cloned repo:
 $ make
 ```
 
-This builds the plugin in `/build/rootfs/`
+This builds the plugin in `./build/`
 
 ### Configuration and Usage
-* Set up the [snap framework](https://github.com/intelsdi-x/snap/blob/master/README.md#getting-started)
-* Ensure `$SNAP_PATH` is exported  
-`export SNAP_PATH=$GOPATH/src/github.com/intelsdi-x/snap/build`
 
 By default pcm executable binary are searched in the directories named by the PATH environment. 
 Customize path to pcm executable is also possible by setting environment variable `export SNAP_PCM_PATH=/path/to/pcm/bin`
@@ -108,37 +105,24 @@ Metrics exposed by "pcm" are system related and might be varied.
 By default metrics are gathered once per second.
 
 ### Examples
-Example running  pcm collector and writing data to file. Notice that snapd has to be running with root privileges, for ability to collect data from PCM
+Example running  pcm collector and writing data to file. Notice that snapteld has to be running with root privileges, for ability to collect data from PCM
 
-In one terminal window, open the snap daemon:
+Ensure [snap daemon is running](https://github.com/intelsdi-x/snap#running-snap):
+* initd: `sudo service snap-telemetry start`
+* systemd: `sudo systemctl start snap-telemetry`
+* command line: `sudo snapteld -l 1 -t 0 &`
+
+Download and load snap plugins:
 ```
-$ snapd -l 1 -t 0
+$ wget http://snap.ci.snap-telemetry.io/plugins/snap-plugin-collector-pcm/latest/linux/x86_64/snap-plugin-collector-pcm
+$ wget http://snap.ci.snap-telemetry.io/plugins/snap-plugin-publisher-file/latest/linux/x86_64/snap-plugin-publisher-file
+$ snaptel plugin load snap-plugin-collector-pcm
+$ snaptel plugin load snap-plugin-publisher-file
 ```
 
-In another terminal window, load pcm plugin for collecting:
-```
-$ snapctl plugin load $SNAP_PCM_PLUGIN_DIR/build/rootfs/snap-plugin-collector-pcm
-Plugin loaded
-Name: pcm
-Version: 8
-Type: collector
-Signed: false
-Loaded Time: Wed, 02 Dec 2015 07:57:33 EST
-```
 See available metrics for your system:
 ```
-$ snapctl metric list
-```
-
-Load file plugin for publishing:
-```
-$ snapctl plugin load $SNAP_DIR/build/plugin/snap-publisher-file
-Plugin loaded
-Name: file
-Version: 3
-Type: publisher
-Signed: false
-Loaded Time: Wed, 02 Dec 2015 07:58:47 EST
+$ snaptel metric list
 ```
 
 Create a task JSON file (exemplary file in examples/tasks/pcm-file.json):  
@@ -193,7 +177,7 @@ Create a task JSON file (exemplary file in examples/tasks/pcm-file.json):
 
 Create a task:
 ```
-snapctl task create -t $SNAP_PCM_PLUGIN_DIR/examples/tasks/pcm-file.json
+snaptel task create -t examples/tasks/pcm-file.json
 Using task manifest to create task
 Task created
 ID: 156366f2-e497-4c10-ad22-560fc71986af
@@ -201,10 +185,10 @@ Name: Task-156366f2-e497-4c10-ad22-560fc71986af
 State: Running
 ```
 
-See sample output from `snapctl task watch <task_id>`
+See sample output from `snaptel task watch <task_id>`
 
 ```
-$ snapctl task watch 156366f2-e497-4c10-ad22-560fc71986af
+$ snaptel task watch 156366f2-e497-4c10-ad22-560fc71986af
 
 Watching Task (156366f2-e497-4c10-ad22-560fc71986af):
 NAMESPACE                        DATA            TIMESTAMP                                       SOURCE
@@ -233,7 +217,7 @@ These data are published to file and stored there (in this example in /tmp/publi
 
 Stop task:
 ```
-$ $SNAP_PATH/bin/snapctl task stop 156366f2-e497-4c10-ad22-560fc71986af
+$ snaptel task stop 156366f2-e497-4c10-ad22-560fc71986af
 Task stopped:
 ID: 156366f2-e497-4c10-ad22-560fc71986af
 ```
