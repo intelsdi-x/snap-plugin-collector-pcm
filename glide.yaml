@@ -1,0 +1,14 @@
+package: github.com/intelsdi-x/snap-plugin-collector-pcm
+import:
+- package: github.com/intelsdi-x/snap-plugin-utilities
+  subpackages:
+  - ns
+- package: github.com/intelsdi-x/snap
+  subpackages:
+  - control/plugin
+  - control/plugin/cpolicy
+  - core
+testImport:
+- package: github.com/smartystreets/goconvey
+  subpackages:
+  - convey
