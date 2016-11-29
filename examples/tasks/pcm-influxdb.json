@@ -27,10 +27,14 @@
             "config": {},            
             "process": null,
             "publish": [
-                {
-                    "plugin_name": "file",
+		{
+                    "plugin_name": "influxdb",
                     "config": {
-                        "file": "/tmp/published_pcm"
+                        "host": "127.0.0.1",
+                        "port": 8086,
+                        "database": "snap",
+                        "user": "admin",
+                        "password": "admin"
                     }
                 }
             ]
