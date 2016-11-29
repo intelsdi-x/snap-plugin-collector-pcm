@@ -36,11 +36,14 @@ In order to use this plugin user is required to have PCM installed in system.
 		`echo 'kernel.nmi_watchdog=0' >> /etc/sysctl.conf`
 		
 * Currently, Ubuntu 14.04 users have to manually compile PCM and add it to $PATH or export $SNAP_PCM_PATH to be able to use it.
+* To be able to run PCM, access to CPUs MSRs (Model Specific Register) is needed. To obtain it, execute `modprobe msr` as root user
+
 
 ### Installation
 
 #### To install Intel PCM:
 Follow the instruction available at http://www.intel.com/software/pcm
+To be sure that installed pcm.x works properly, try to execute `pcm.x /csv`
 
 #### To build the plugin binary:
 Fork https://github.com/intelsdi-x/snap-plugin-collector-pcm  
