@@ -22,8 +22,6 @@ package pcm
 import (
 	"bufio"
 	"fmt"
-	"io"
-	"math"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -32,7 +30,9 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
+	"io"
+
+	"math"
 
 	"github.com/intelsdi-x/snap-plugin-utilities/ns"
 	"github.com/intelsdi-x/snap/control/plugin"
@@ -44,7 +44,7 @@ const (
 	// Name of plugin
 	name = "pcm"
 	// Version of plugin
-	version = 10
+	version = 9
 	// Type of plugin
 	pluginType = plugin.CollectorPluginType
 )
@@ -55,10 +55,9 @@ func Meta() *plugin.PluginMeta {
 
 // PCM
 type PCM struct {
-	keys        []string
-	data        map[string]float64
-	mutex       *sync.RWMutex
-	initialized bool
+	keys  []string
+	data  map[string]float64
+	mutex *sync.RWMutex
 }
 
 func (p *PCM) Keys() []string {
@@ -71,17 +70,6 @@ func (p *PCM) Data() map[string]float64 {
 
 // // CollectMetrics returns metrics from pcm
 func (p *PCM) CollectMetrics(mts []plugin.MetricType) ([]plugin.MetricType, error) {
-	if p.initialized == false {
-		err := p.run()
-		if err != nil {
-			log.WithFields(log.Fields{
-				"block":    "CollectMetrics",
-				"function": "run",
-			}).Error(err)
-			return nil, err
-		}
-		p.initialized = true
-	}
 	p.mutex.RLock()
 	defer p.mutex.RUnlock()
 	for i := range mts {
@@ -97,20 +85,8 @@ func (p *PCM) CollectMetrics(mts []plugin.MetricType) ([]plugin.MetricType, erro
 // GetMetricTypes returns the metric types exposed by pcm
 func (p *PCM) GetMetricTypes(_ plugin.ConfigType) ([]plugin.MetricType, error) {
 	mts := make([]plugin.MetricType, len(p.keys))
-	if p.initialized == false {
-		err := p.run()
-		if err != nil {
-			log.WithFields(log.Fields{
-				"block":    "GetMetricTypes",
-				"function": "run",
-			}).Error(err)
-			return nil, err
-		}
-		p.initialized = true
-	}
 	p.mutex.RLock()
 	defer p.mutex.RUnlock()
-
 	for i, k := range p.keys {
 		mts[i] = plugin.MetricType{Namespace_: core.NewNamespace(strings.Split(strings.TrimPrefix(k, "/"), "/")...)}
 	}
@@ -123,8 +99,15 @@ func (p *PCM) GetConfigPolicy() (*cpolicy.ConfigPolicy, error) {
 	return c, nil
 }
 
-func NewPCMCollector() *PCM {
-	return &PCM{mutex: &sync.RWMutex{}, data: map[string]float64{}, initialized: false}
+func NewPCMCollector() (*PCM, error) {
+	pcm := &PCM{mutex: &sync.RWMutex{}, data: map[string]float64{}}
+
+	err := pcm.run()
+	if err != nil {
+		return nil, err
+	}
+
+	return pcm, nil
 }
 func (pcm *PCM) run() error {
 	var cmd *exec.Cmd
@@ -134,7 +117,7 @@ func (pcm *PCM) run() error {
 		c, err := exec.LookPath("pcm.x")
 		if err != nil {
 			fmt.Fprint(os.Stderr, "Unable to find PCM.  Ensure it's in your path or set SNAP_PCM_PATH.")
-			return err
+			panic(err)
 		}
 		cmd = exec.Command(c, "/csv", "-nc", "-r", "1")
 	}
