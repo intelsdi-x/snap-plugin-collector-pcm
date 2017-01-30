@@ -28,8 +28,10 @@ import (
 
 // plugin bootstrap
 func main() {
-	p := pcm.NewPCMCollector()
-
+	p, err := pcm.NewPCMCollector()
+	if err != nil {
+		panic(err)
+	}
 	plugin.Start(
 		pcm.Meta(),
 		p,
