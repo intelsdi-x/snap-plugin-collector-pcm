@@ -20,15 +20,12 @@ limitations under the License.
 package pcm
 
 import (
-	"bufio"
+	"context"
 	"fmt"
 	"io"
-	"math"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -38,13 +35,15 @@ import (
 	"github.com/intelsdi-x/snap/control/plugin"
 	"github.com/intelsdi-x/snap/control/plugin/cpolicy"
 	"github.com/intelsdi-x/snap/core"
+
+	"github.com/intelsdi-x/snap-plugin-collector-pcm/parser"
 )
 
 const (
 	// Name of plugin
 	name = "pcm"
 	// Version of plugin
-	version = 10
+	version = 11
 	// Type of plugin
 	pluginType = plugin.CollectorPluginType
 )
@@ -55,37 +54,75 @@ func Meta() *plugin.PluginMeta {
 
 // PCM
 type PCM struct {
-	keys        []string
-	data        map[string]float64
-	mutex       *sync.RWMutex
-	initialized bool
+	parser           parser.Parser
+	initializedMutex *sync.Mutex
+	initialized      bool
+
+	RawToNs, NsToRaw map[parser.Key]parser.Key
 }
 
-func (p *PCM) Keys() []string {
-	return p.keys
-}
+func (p *PCM) initialize() error {
+	p.initializedMutex.Lock()
+	defer p.initializedMutex.Unlock()
 
-func (p *PCM) Data() map[string]float64 {
-	return p.data
+	if !p.initialized {
+		err := p.run()
+		if err != nil {
+			log.WithFields(log.Fields{
+				"block":    "initialize",
+				"function": "run",
+			}).Error(err)
+			return err
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
+		defer cancel()
+		keys, err := p.parser.GetKeys(ctx)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"block":    "initialize",
+				"function": "GetKeys",
+			}).Error(err)
+			return err
+		}
+		p.RawToNs = map[parser.Key]parser.Key{}
+		p.NsToRaw = map[parser.Key]parser.Key{}
+		for _, key := range keys {
+			nsComp := ns.ReplaceNotAllowedCharsInNamespacePart(key.Component)
+			nsMt := ns.ReplaceNotAllowedCharsInNamespacePart(key.MetricName)
+			nsKey := parser.Key{Component: nsComp, MetricName: nsMt}
+			p.RawToNs[key] = nsKey
+			p.NsToRaw[nsKey] = key
+
+		}
+
+		p.initialized = true
+	}
+
+	return nil
+
 }
 
 // // CollectMetrics returns metrics from pcm
 func (p *PCM) CollectMetrics(mts []plugin.MetricType) ([]plugin.MetricType, error) {
-	if p.initialized == false {
-		err := p.run()
-		if err != nil {
-			log.WithFields(log.Fields{
-				"block":    "CollectMetrics",
-				"function": "run",
-			}).Error(err)
-			return nil, err
-		}
-		p.initialized = true
+	err := p.initialize()
+	if err != nil {
+		return nil, err
 	}
-	p.mutex.RLock()
-	defer p.mutex.RUnlock()
+
+	vals, err := p.parser.GetValues(context.TODO())
+	if err != nil {
+		log.WithFields(log.Fields{
+			"block":    "CollectMetrics",
+			"function": "GetValues",
+		}).Error(err)
+		return nil, err
+	}
+
 	for i := range mts {
-		if v, ok := p.data[mts[i].Namespace().String()]; ok {
+		ns := mts[i].Namespace()
+		key := p.NsToRaw[parser.Key{Component: ns[2].Value, MetricName: ns[3].Value}]
+		if v, ok := vals[key]; ok {
 			mts[i].Data_ = v
 			mts[i].Timestamp_ = time.Now()
 		}
@@ -96,23 +133,13 @@ func (p *PCM) CollectMetrics(mts []plugin.MetricType) ([]plugin.MetricType, erro
 
 // GetMetricTypes returns the metric types exposed by pcm
 func (p *PCM) GetMetricTypes(_ plugin.ConfigType) ([]plugin.MetricType, error) {
-	mts := []plugin.MetricType{}
-	if p.initialized == false {
-		err := p.run()
-		if err != nil {
-			log.WithFields(log.Fields{
-				"block":    "GetMetricTypes",
-				"function": "run",
-			}).Error(err)
-			return nil, err
-		}
-		p.initialized = true
+	err := p.initialize()
+	if err != nil {
+		return nil, err
 	}
-	p.mutex.RLock()
-	defer p.mutex.RUnlock()
-
-	for _, k := range p.keys {
-		mt := plugin.MetricType{Namespace_: core.NewNamespace(strings.Split(strings.TrimPrefix(k, "/"), "/")...)}
+	mts := []plugin.MetricType{}
+	for nsKey := range p.NsToRaw {
+		mt := plugin.MetricType{Namespace_: core.NewNamespace("intel", "pcm", nsKey.Component, nsKey.MetricName)}
 		mts = append(mts, mt)
 	}
 	return mts, nil
@@ -125,9 +152,16 @@ func (p *PCM) GetConfigPolicy() (*cpolicy.ConfigPolicy, error) {
 }
 
 func NewPCMCollector() *PCM {
-	return &PCM{mutex: &sync.RWMutex{}, data: map[string]float64{}, initialized: false}
+	return &PCM{initializedMutex: &sync.Mutex{}}
 }
+
+var dirtyMock io.Reader
+
 func (pcm *PCM) run() error {
+	if dirtyMock != nil {
+		pcm.parser = parser.RunParser(dirtyMock)
+		return nil
+	}
 	var cmd *exec.Cmd
 	if path := os.Getenv("SNAP_PCM_PATH"); path != "" {
 		cmd = exec.Command(filepath.Join(path, "pcm.x"), "/csv", "-nc", "-r", "1")
@@ -145,27 +179,11 @@ func (pcm *PCM) run() error {
 		return fmt.Errorf("Error creating StdoutPipe %v", err)
 	}
 
-	go func() {
-		pcm.parse(cmdReader)
-	}()
+	pcm.parser = parser.RunParser(cmdReader)
 
 	err = cmd.Start()
 	if err != nil {
 		return fmt.Errorf("Error starting pcm %v", err)
-	}
-
-	// we need to wait until we have our metric types
-	st := time.Now()
-	for {
-		pcm.mutex.RLock()
-		c := len(pcm.keys)
-		pcm.mutex.RUnlock()
-		if c > 0 {
-			break
-		}
-		if time.Since(st) > time.Second*2 {
-			return fmt.Errorf("Timed out waiting for metrics from pcm")
-		}
 	}
 
 	// LEAVE the following block for debugging
@@ -176,44 +194,4 @@ func (pcm *PCM) run() error {
 	// }
 
 	return nil
-}
-
-func (pcm *PCM) parse(reader io.Reader) {
-	// read the data from stdout
-	scanner := bufio.NewScanner(reader)
-	first := true
-	for scanner.Scan() {
-		if first {
-			first = false
-			continue
-		}
-		if len(pcm.keys) == 0 {
-			pcm.mutex.Lock()
-			keys := strings.Split(strings.TrimSuffix(scanner.Text(), ";"), ";")
-			//skip the date and time fields
-			pcm.keys = make([]string, len(keys[2:]))
-			for i, k := range keys[2:] {
-				// removes all spaces from metric key
-				metricKey := ns.ReplaceNotAllowedCharsInNamespacePart(k)
-				pcm.keys[i] = fmt.Sprintf("/intel/pcm/%s", metricKey)
-			}
-			pcm.mutex.Unlock()
-			continue
-		}
-
-		pcm.mutex.Lock()
-		datal := strings.Split(strings.TrimSuffix(scanner.Text(), ";"), ";")
-		for i, d := range datal[2:] {
-			v, err := strconv.ParseFloat(strings.TrimSpace(d), 64)
-			if err == nil {
-				pcm.data[pcm.keys[i]] = v
-			} else {
-				fmt.Fprintln(os.Stderr, "Invalid metric value", err)
-				pcm.data[pcm.keys[i]] = math.NaN()
-			}
-		}
-		pcm.mutex.Unlock()
-		// fmt.Fprintf(os.Stderr, "data >>> %+v\n", pcm.data)
-		// fmt.Fprintf(os.Stdout, "data >>> %+v\n", pcm.data)
-	}
 }
