@@ -249,6 +249,6 @@ There is more than one way to give back, from examples to blogs to code updates.
 
 ## Acknowledgements
 
-* Author: [Izabella Raulin](https://github.com/IzabellaRaulin)
+* Author: [Justin Guidroz](https://github.com/geauxvirtual)
 
 And **thank you!** Your contribution, through code and participation, is incredibly important to us.
