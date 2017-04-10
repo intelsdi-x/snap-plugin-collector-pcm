@@ -1,8 +1,8 @@
-hash: 5b524bca6145db6f5b0d65e77c48f6cade39a79b3124b571382e1491717888d7
-updated: 2016-11-29T09:47:58.139689062+01:00
+hash: a1f8111a721ee12be291207b8b31aeb2d87e775661b0cb2d89e4d9679c2873f5
+updated: 2017-04-10T08:39:27.210183105+02:00
 imports:
 - name: github.com/intelsdi-x/snap
-  version: d79020be7091ab2c92dc1e91d25d0885bba830db
+  version: 0b2c0313ff98ef3feccf78ff56a51bb44ccbe5bc
   subpackages:
   - control/plugin
   - control/plugin/cpolicy
@@ -13,6 +13,7 @@ imports:
   - core/ctypes
   - core/serror
   - pkg/ctree
+  - pkg/fileutils
   - pkg/schedule
   - pkg/stringutils
   - scheduler/wmap
@@ -22,11 +23,13 @@ imports:
   - ns
   - str
 - name: github.com/oleiade/reflections
-  version: 0e86b3c98b2ff33e30c85cfe97d9a63d439fe7eb
+  version: 632977f98cd34d217c4b57d0840ec188b3d3dcaf
+- name: github.com/pkg/errors
+  version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/robfig/cron
   version: 32d9c273155a0506d27cf73dd1246e86a470997e
 - name: github.com/Sirupsen/logrus
-  version: be52937128b38f1d99787bb476c789e2af1147f1
+  version: ba1b36c82c5e05c4f912a88eab0dcd91a171688f
 - name: golang.org/x/sys
   version: 30237cf4eefd639b184d1f2cb77a581ea0be8947
   subpackages:
@@ -46,7 +49,7 @@ testImports:
   - internal/go-render/render
   - internal/oglematchers
 - name: github.com/smartystreets/goconvey
-  version: 3c2572876754c4669ae7417b219f0b30a29b32c7
+  version: d4c757aa9afd1e2fc1832aaab209b5794eb336e1
   subpackages:
   - convey
   - convey/gotest
