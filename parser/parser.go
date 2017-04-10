@@ -195,7 +195,7 @@ func (p *pcmParser) run() {
 			},
 			).Fatalf("header and  lines should have equal lenght, got: %v and %v", len(first)+ignoreFirstNFields, len(current))
 		}
-		current = current[2:]
+		current = current[ignoreFirstNFields:]
 
 		vals := ValuesOrError{Values: Values{}}
 		for i, field := range current {
