@@ -49,7 +49,8 @@ const (
 )
 
 func Meta() *plugin.PluginMeta {
-	return plugin.NewPluginMeta(name, version, pluginType, []string{plugin.SnapGOBContentType}, []string{plugin.SnapGOBContentType})
+	return plugin.NewPluginMeta(name, version, pluginType, []string{plugin.SnapGOBContentType}, []string{plugin.SnapGOBContentType},
+		plugin.Exclusive(true)) // this should prevent PCM racing for MSRs from multiple instances
 }
 
 // PCM
