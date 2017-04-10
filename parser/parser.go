@@ -133,27 +133,19 @@ func (p *pcmParser) run() {
 		line++
 		if first == nil {
 			first = splitLine(scanner.Text())
-			if len(first) < ignoreFirstNFields+1 {
+			const want = ignoreFirstNFields + 1
+			if len(first) < want {
 				log.WithFields(log.Fields{
 					"block":    "header",
 					"line":     line,
 					"function": "run",
-				}).Fatalf("first line should have at least %v elements separated by ';', got: %v", ignoreFirstNFields+1, len(first))
+				}).Fatalf("first line should have at least %v elements separated by ';', got: %v", want, len(first))
 			}
 			fillHeader(first)
 			continue
 		}
 		if second == nil {
 			second = splitLine(scanner.Text())
-			if len(first) < ignoreFirstNFields {
-				log.WithFields(log.Fields{
-					"block":    "header",
-					"line":     line,
-					"function": "run",
-				},
-				).Fatalf("second line should have at least %v elements separated by ';', got: %v", ignoreFirstNFields+1, len(second))
-			}
-
 			if len(first) != len(second) {
 				log.WithFields(log.Fields{
 					"block":    "data",
