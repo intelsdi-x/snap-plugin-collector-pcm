@@ -10,12 +10,16 @@ import (
 
 	"math"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/pkg/errors"
 )
 
-// When true, parser behaves like old one, it's returning last cached line
+// CompatibilityMode hen true, parser behaves like old one, it's returning last cached line
 // instead waiting for next one.
 var CompatibilityMode = true
+
+// Specifies how many fields should be ignored before getting useful data
+const ignoreFirstNFields = 2
 
 type (
 	Key struct {
@@ -124,19 +128,43 @@ func (p *pcmParser) run() {
 	scanner := bufio.NewScanner(p.source)
 	var first, second, current []string
 	streamInfoClosed := false
+	line := 0
 	for scanner.Scan() {
+		line++
 		if first == nil {
 			first = splitLine(scanner.Text())
+			if len(first) < ignoreFirstNFields+1 {
+				log.WithFields(log.Fields{
+					"block":    "header",
+					"line":     line,
+					"function": "run",
+				}).Fatalf("first line should have at least %v elements separated by ';', got: %v", ignoreFirstNFields+1, len(first))
+			}
 			fillHeader(first)
-			first = first[2:]
 			continue
 		}
 		if second == nil {
 			second = splitLine(scanner.Text())
-			second = second[2:]
-			if len(first) != len(second) {
-				panic("data length changed")
+			if len(first) < ignoreFirstNFields {
+				log.WithFields(log.Fields{
+					"block":    "header",
+					"line":     line,
+					"function": "run",
+				},
+				).Fatalf("second line should have at least %v elements separated by ';', got: %v", ignoreFirstNFields+1, len(second))
 			}
+
+			if len(first) != len(second) {
+				log.WithFields(log.Fields{
+					"block":    "data",
+					"line":     line,
+					"function": "run",
+				},
+				).Fatalf("header lines should have equal lenght: got %v and %v", len(first), len(second))
+			}
+
+			first = first[ignoreFirstNFields:]
+			second = second[ignoreFirstNFields:]
 
 			withLock(p.keysInfoMutex, func() {
 				p.keys = make([]Key, len(first))
@@ -149,10 +177,15 @@ func (p *pcmParser) run() {
 		}
 
 		current = splitLine(scanner.Text())
-		current = current[2:]
-		if len(first) != len(current) {
-			panic("data length changed")
+		if len(first)+ignoreFirstNFields != len(current) {
+			log.WithFields(log.Fields{
+				"block":    "header",
+				"line":     line,
+				"function": "run",
+			},
+			).Fatalf("header and  lines should have equal lenght, got: %v and %v", len(first)+ignoreFirstNFields, len(current))
 		}
+		current = current[2:]
 
 		vals := ValuesOrError{Values: Values{}}
 		for i, field := range current {
