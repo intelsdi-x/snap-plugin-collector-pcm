@@ -32,7 +32,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// CompatibilityMode hen true, parser behaves like old one, it's returning last cached line
+// CompatibilityMode when true, parser behaves like old one, it's returning last cached line
 // instead waiting for next one.
 var CompatibilityMode = true
 
@@ -157,7 +157,7 @@ func (p *pcmParser) run() {
 					"block":    "header",
 					"line":     line,
 					"function": "run",
-				}).Fatalf("first line should have at least %v elements separated by ';', got: %v", want, len(first))
+				}).Fatalf("first line should have at least %v columns separated by ';', got: %v", want, len(first))
 			}
 			fillHeader(first)
 			continue
@@ -170,7 +170,7 @@ func (p *pcmParser) run() {
 					"line":     line,
 					"function": "run",
 				},
-				).Fatalf("header lines should have equal lenght: got %v and %v", len(first), len(second))
+				).Fatalf("headers' lines should have equal number of columns: got %v and %v", len(first), len(second))
 			}
 
 			first = first[ignoreFirstNFields:]
@@ -193,7 +193,7 @@ func (p *pcmParser) run() {
 				"line":     line,
 				"function": "run",
 			},
-			).Fatalf("header and  lines should have equal lenght, got: %v and %v", len(first)+ignoreFirstNFields, len(current))
+			).Fatalf("headers' and data records should have equal number of columns, got: %v and %v", len(first)+ignoreFirstNFields, len(current))
 		}
 		current = current[ignoreFirstNFields:]
 
