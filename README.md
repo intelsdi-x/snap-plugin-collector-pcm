@@ -1,5 +1,11 @@
 # snap collector plugin - pcm
 
+## Compatibility notice
+
+**From version 11 namespaces are not compatible with versions 10 and earlier. Earlier versions are very likely to return invalid metric values, sometimes under missleading namespaces. We strongly encourage you to use current version of this plugin even if it requires to refactor your workflows**
+
+***
+
 This plugin collects  metrics from PCM (Intel Performance Counter Monitor)
 
 It is used in the [snap framework] (http://github.com/intelsdi-x/snap).
