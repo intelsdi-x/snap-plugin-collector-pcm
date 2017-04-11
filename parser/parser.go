@@ -199,21 +199,25 @@ func (p *pcmParser) run() {
 
 		vals := ValuesOrError{Values: Values{}}
 		for i, field := range current {
-			v, err := strconv.ParseFloat(field, 64)
+
 			k := Key{Component: first[i], MetricName: second[i]}
-			if err == nil {
-				vals.Values[k] = v
+			if strings.ToLower(field) == "n/a" {
+				//TODO: make sure this is desired, maybe entry should be just missing
+				vals.Values[k] = math.NaN()
 			} else {
-				if strings.ToLower(field) == "n/a" {
-					//TODO: make sure this is desired, maybe entry should be just missing
-					vals.Values[k] = math.NaN()
+				if strings.HasSuffix(field, "%") {
+					field = strings.TrimSpace(strings.TrimSuffix(field, "%"))
+				}
+				v, err := strconv.ParseFloat(field, 64)
+				if err == nil {
+					vals.Values[k] = v
 				} else {
 					vals = ValuesOrError{Error: errors.Wrapf(err, "parsing %v = %v failed", k, field)}
-					streamInfoClosed = true
 					break
 				}
 			}
 		}
+
 		if p.sink == nil {
 			withLock(p.streamInfoMutex, func() {
 				orgSig := p.streamInfoReady
