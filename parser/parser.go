@@ -32,10 +32,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-// CompatibilityMode when true, parser behaves like old one, it's returning last cached line
-// instead waiting for next one.
-var CompatibilityMode = true
-
 // Specifies how many fields should be ignored before getting useful data
 const ignoreFirstNFields = 2
 
@@ -69,69 +65,34 @@ func RunParser(reader io.Reader) Parser {
 	return p
 }
 
-func RunStreamedParser(reader io.Reader, chanLen int) (Parser, <-chan ValuesOrError) {
-	p := &pcmParser{
-		source:        reader,
-		sink:          make(chan ValuesOrError, chanLen),
-		keysReady:     make(chan struct{}),
-		keysInfoMutex: new(sync.RWMutex),
-	}
-	go p.run()
-
-	return p, p.sink
-}
-
 func (p *pcmParser) GetKeys(ctx context.Context) ([]Key, error) {
-	var sig chan struct{}
-	withRLock(p.keysInfoMutex, func() {
-		sig = p.keysReady
-	})
-	for {
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		case <-sig:
-			var keys []Key
-			withRLock(p.keysInfoMutex, func() {
-				keys = p.keys
-			})
-			return keys, nil
-		}
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case <-p.keysReady:
+		var keys []Key
+		withRLock(p.keysInfoMutex, func() {
+			keys = p.keys
+		})
+		return keys, nil
 	}
 }
 
 func (p *pcmParser) GetValues(ctx context.Context) (Values, error) {
-	if p.sink != nil {
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		case vals := <-p.sink:
-			return vals.Values, vals.Error
-		}
-	}
-
-	var sig chan struct{}
-	withRLock(p.streamInfoMutex, func() {
-		sig = p.streamInfoReady
-	})
-
-	for {
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		case <-sig:
-			var sVal ValuesOrError
-			withRLock(p.streamInfoMutex, func() {
-				sVal = p.stream
-			})
-			return sVal.Values, sVal.Error
-		}
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case <-p.streamInfoReady:
+		var sVal ValuesOrError
+		withRLock(p.streamInfoMutex, func() {
+			sVal = p.stream
+		})
+		return sVal.Values, sVal.Error
 	}
 }
 
 type pcmParser struct {
 	source io.Reader
-	sink   chan ValuesOrError
 
 	keys          []Key
 	keysReady     chan struct{}
@@ -145,7 +106,16 @@ type pcmParser struct {
 func (p *pcmParser) run() {
 	scanner := bufio.NewScanner(p.source)
 	var first, second, current []string
-	streamInfoClosed := false
+
+	streamClose := func() func() {
+		closeOnce := sync.Once{}
+		return func() {
+			closeOnce.Do(func() {
+				close(p.streamInfoReady)
+			})
+		}
+
+	}()
 	line := 0
 	for scanner.Scan() {
 		line++
@@ -218,35 +188,18 @@ func (p *pcmParser) run() {
 			}
 		}
 
-		if p.sink == nil {
-			withLock(p.streamInfoMutex, func() {
-				orgSig := p.streamInfoReady
-				if !CompatibilityMode {
-					p.streamInfoReady = make(chan struct{})
-				}
-				p.stream = vals
-				if !CompatibilityMode || !streamInfoClosed {
-					close(orgSig)
-					streamInfoClosed = true
-				}
-			})
-		} else {
-			p.sink <- vals
-		}
-	}
-	if p.sink == nil {
-		if !CompatibilityMode {
-			withLock(p.streamInfoMutex, func() {
-				orgSig := p.streamInfoReady
-				p.stream = ValuesOrError{Error: errors.New("stream not running")}
-				close(orgSig)
-				streamInfoClosed = true
+		withLock(p.streamInfoMutex, func() {
+			p.stream = vals
+			streamClose()
+		})
 
-			})
-		}
-	} else {
-		close(p.sink)
 	}
+
+	withLock(p.streamInfoMutex, func() {
+		p.stream = ValuesOrError{Error: errors.New("stream not running")}
+		streamClose()
+	})
+
 }
 
 func fillHeader(headerRef []string) {
