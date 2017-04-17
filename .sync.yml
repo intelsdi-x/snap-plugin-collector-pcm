@@ -7,12 +7,3 @@
     # see following travis test for more information:
     # https://travis-ci.org/intelsdi-x/snap-plugin-collector-pcm/jobs/161792384#L165-L192
     # matrix:
-  deploy:
-    access_key_id: AKIAINMB43VSSPFZISAA
-    secret_access_key:
-      secure: Cf2BuX7/kSFlGsTrYTHmeJ/7c4aRcOxulhTEoD1C7GVYMdlSeK1Jvnklef5Dzs/l223mNuhm6oR4pA27mSOFOgWtBj/5+g1vHBcPdQd3rEg6mIxb0ec9BZQMZwCgl3/8wasKmQuobwBT/bsEB9zuV84Gqdc78FrAX7Lw9QPx9PazMqOUQaI7frMoP87Ln72WuVhbc34BSBf/PTKKI2eWM/XGRKi5m2Zyp33rN1cB6/tM7kxPp51brODvCTyhIYZSLZt3ywdyJ5kcYGm7o5hFpKTg9nm0UHkeQC7dEgjL4DIE5sPGVxJL8od0ptr7GncJahKO2EsuiVd6nC7ulOdAdHOgFshIgZzvr8UUZVyOSQX0Vf1amGuNPj4qjdUGKvCLNL3dbIFzyF/67CNlIDPTziSQbk5BrS50qbvfb4fifhPl1MGg9e9O11aPBCqxg70lCPIxIwedCbDshoPvQQMtKjnfX7yj8iQlnwFcLQsLeFkpPOGxq4d5CXwkp9TDWcaKf8WhOEu8qDA5Bttf0Zh7CcdmYXQSDaSpfWh955x+wg3j+lyvqFKwwKkiN3PX/1bdhNtVoTQ5Hc1Ib9J+jcLXF6fSwzyjhU+BpdQSoqveZCLIYD9rrpDzFygnX5NPSwb3jA47jVwh6LFPlUodzP8fMka5EXfJ+/TGLGjcgaiADfo=
-    api_key:
-      secure: h6iu131+0Dtr+fS3f++DnL5KegS1O8tdnPFt9EQuJbRRp8U2DaF8unyIQ7OVxOl3W/d6W88KZTnTOK3gUX6gTW4eXYjVQhjzkiB9FWvsyHOxwKkxNLo6OIq5XU9uZHhbVsRUUubo0I2ly4pzvnTcv2FigEV2uUKRqT87kpFMEBDAsiPNvfk75KBNjLQ3vPuyq7Czu1SUX3iYbCP14Rlp5nTjbhl8epLy7hngnysxzeDFrYhN6bMY+6XD0vUoAKooZgZ8Avm+KlciSEs+jOxEQCNrKQFIyCez+c/S8/X7nOFmaswbuhJEiIlVWCH0pkHRC1thjXPywITtVdlG5Ehor5kQgA8N1h+V4c9GjyJWyml2Sj9RxmsrcFO9FVuT+c46ZeF7qO4I6++5kO9xNONXD18R1LfTmXPtdUXJHxul6g6gxjY/HJ2+Z5sixMCVJWoeAebssHEntjJfxC3OqLNG2nAg61Og8RDsecdJ9xH8jgn6v6SKoRdxMTY8FtY8am5HnvHOLPa/w2HwreBtfnQEMDfjvCgDbrxrXQ16+oF+zlqV182mwkpFML2/FpfXnRpgLo5BigzsiSEch950IvHznqbeGAh//a+gSQ95huxXeSbfouJdHsqfMTbBiH83UFhrdABfTXwKXYgNfU/idkykbVwJR4ELZzplKpHh1wBXkug=
-scripts/deps.sh:
-  packages:
-    - github.com/smartystreets/goconvey # NOTE: this should be moved to godep/glide
