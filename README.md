@@ -69,39 +69,41 @@ Customize path to pcm executable is also possible by setting environment variabl
 To learn more about Intel PCM visit http://www.intel.com/software/pcm
 
 ### Collected Metrics
-This plugin has the ability to gather the following metrics:
+This plugin has the ability to gather metrics for various components (like system, particular socket, dram etc.). Namespaces are constructed using following rule `/intel/pcm/[component name]/[metric name]`
 
-Namespace | Description 
------------- | -------------
-/intel/pcm/ACYC|  Number of clockticks. This takes turbo and power saving modes into account.    
-/intel/pcm/AFREQ| Frequency relative to nominal CPU frequency excluding the time when the CPU is sleeping.
-/intel/pcm/C0res%| Core 0 residency
-/intel/pcm/C1res%| Core 1 residency
-/intel/pcm/C2res%| Core 2 residency
-/intel/pcm/C3res%| Core 3 residency
-/intel/pcm/Cres%| Cores residency
-/intel/pcm/EXEC| Instructions per nominal CPU cycle, i.e. in respect to the CPU frequency ignoring turbo and power saving.
-/intel/pcm/FREQ| Frequency relative to nominal CPU frequency, equals clockticks/invariant_timer_ticks.          
-/intel/pcm/INST| Number of instructions retired            
-/intel/pcm/INSTnom| Instructions per nominal cycle multiplied by number of threads per core.              
-/intel/pcm/INSTnom%| Instructions per nominal cycle multiplied by number of threads per core relative to maximum IPC. The maximum IPC is 2 for Atom and 4 for all other supported processors.       
-/intel/pcm/IPC| Instructions per cycle, this measures how effectively you are using the core.        
-/intel/pcm/L2CLK| Very rough estimate of cycles lost to L2 cache misses vs. clockticks.
-/intel/pcm/L2HIT| L2 cache hit ratio (0.00-1.00)            
-/intel/pcm/L2MISS| L2 cache line misses
-/intel/pcm/L2MPI| L2 cache misses per instruction    
-/intel/pcm/L3CLK| Very rough estimate of cycles lost to L3 cache misses vs. clockticks.   
-/intel/pcm/L3HIT| L3 cache hit ratio (0.00-1.00)          
-/intel/pcm/L3MISS| L3 cache line misses        
-/intel/pcm/L3MPI|  L3 cache misses per instruction            
-/intel/pcm/PhysIPC| Instructions per cycle (IPC) multiplied by number of threads per core.    
-/intel/pcm/PhysIPC%| Instructions per cycle (IPC) multiplied by number of threads per core relative to maximum IPC.          
-/intel/pcm/Proc_Energy_Joules| The energy consumed by the processor in Joules. Divide by the time to get the power consumption in watt
-/intel/pcm/READ| Bytes read from memory controller in GBytes.
-/intel/pcm/SKT0| CPU energy in Joules per socket 0
-/intel/pcm/TEMP| Temperature reading in degree Celsius relative to the TjMax temperature (thermal headroom; max_design_temp - current_temp)
-/intel/pcm/TIME_ticks| Number of invariant clockticks. This is invariant to turbo and power saving modes.
-/intel/pcm/WRITE| Bytes written to memory controller in GBytes.
+Here are abbreviations for metric names [source](https://software.intel.com/en-us/blogs/2014/07/18/intel-pcm-column-names-decoder-ring):
+
+The following metrics are available on all levels:
+
+Namespace	|	Description
+-----------	|	--------------
+/intel/pcm/[Component]/EXEC	|	Instructions per nominal CPU cycle, i.e. in respect to the CPU frequency ignoring turbo and power saving
+/intel/pcm/[Component]/IPC	|	Instructions per cycle. This measures how effectively you are using the core.
+/intel/pcm/[Component]/FREQ	|	Frequency relative to nominal CPU frequency (“clockticks”/”invariant timer ticks”)
+/intel/pcm/[Component]/AFREQ	|	Frequency relative to nominal CPU frequency excluding the time when the CPU is sleeping
+/intel/pcm/[Component]/L3MISS	|	L3 cache line misses in millions
+/intel/pcm/[Component]/L2MISS	|	L2 cache line misses in millions
+/intel/pcm/[Component]/L3HIT	|	L3 Cache hit ratio (hits/reference)
+/intel/pcm/[Component]/L2HIT	|	L2 Cache hit ratio (hits/reference)
+/intel/pcm/[Component]/L3CLK	|	Very rough estimate of cycles lost to L3 cache misses vs. clockticks
+/intel/pcm/[Component]/L2CLK	|	Very rough estimate of cycles lost to L2 cache misses vs. clockticks
+/intel/pcm/[Component]/READ	|	Memory read traffic on this socket in GB
+/intel/pcm/[Component]/WRITE	|	Memory write traffic on this socket in GB
+/intel/pcm/[Component]/C[CoreNumber]res	|	Core residency
+/intel/pcm/[Socket]/Proc_Energy_Joules	|	The energy consumed by the processor in Joules. Divide by the time to get the power consumption in watt
+/intel/pcm/[Socket]/DRAM_Energy_Joules	|	The energy consumed by the DRAM attached to this socket in Joules. Divide by the time to get the power consumption in watt
+/intel/pcm/[Socket]/TEMP	|	Thermal headroom in Kelvin (max design temperature – current temperature)
+/intel/pcm/[System]/INST	|	Number of instructions retired
+/intel/pcm/[System]/ACYC	|	Number of clockticks, This takes turbo and power saving modes into account.
+/intel/pcm/[System]/TIME_ticks	|	Number of invariant clockticks. This is invariant to turbo and power saving modes.
+/intel/pcm/[System]/PhysIPC	|	Instructions per cycle (IPC) multiplied by number of threads per core. See section "Core Cycles-per-Instruction (CPI) and Thread CPI" in Performance Insights to Intel® Hyper-Threading Technology for some background information.
+/intel/pcm/[System]/PhysIPC%	|	Instructions per cycle (IPC) multiplied by number of threads per core relative to maximum IPC
+/intel/pcm/[System]/INSTnom	|	Instructions per nominal cycle multiplied by number of threads per core
+/intel/pcm/[System]/INSTnom%	|	Instructions per nominal cycle multiplied by number of threads per core relative to maximum IPC. The maximum IPC is 2 for Atom and 4 for all other supported processors.
+/intel/pcm/[System]/TotalQPIin	|	QPI data traffic estimation (data traffic coming to CPU/socket through QPI links) in MB (1024*1024)
+/intel/pcm/[System]/QPItoMC	|	Ratio of QPI traffic to memory traffic
+/intel/pcm/[System]/TotalQPIout	|	QPI traffic estimation (data and non-data traffic outgoing from CPU/socket through QPI links) in MB (1024*1024)
+
 
 Metrics exposed by "pcm" are system related and might be varied.
 
@@ -139,30 +141,7 @@ Create a task JSON file (exemplary file in examples/tasks/pcm-file.json):
     "workflow": {
         "collect": {
             "metrics": {
-                "/intel/pcm/IPC": {},
-                "/intel/pcm/L2HIT": {},
-                "/intel/pcm/L2MISS": {},
-                "/intel/pcm/EXEC": {},
-                "/intel/pcm/FREQ": {},
-                "/intel/pcm/INST": {},
-                "/intel/pcm/INSTnom": {},
-                "/intel/pcm/INSTnom%": {},
-                "/intel/pcm/L3HIT": {},
-                "/intel/pcm/L3MISS": {},
-                "/intel/pcm/PhysIPC": {},
-                "/intel/pcm/PhysIPC%": {},
-                "/intel/pcm/Proc_Energy_Joules": {},
-                "/intel/pcm/READ": {},
-                "/intel/pcm/SKT0": {},
-                "/intel/pcm/TEMP": {},
-                "/intel/pcm/TIME_ticks": {},
-                "/intel/pcm/WRITE": {}
-            },
-            "config": {
-                "/intel/pcm": {
-                    "user": "root",
-                    "password": "secret"
-                }
+                "/intel/pcm/*": {}
             },
             "process": null,
             "publish": [
@@ -183,36 +162,76 @@ Create a task:
 snaptel task create -t examples/tasks/pcm-file.json
 Using task manifest to create task
 Task created
-ID: 156366f2-e497-4c10-ad22-560fc71986af
-Name: Task-156366f2-e497-4c10-ad22-560fc71986af
+ID: 44c01cd0-7133-49b1-a95c-a444db064b40
+Name: Task-44c01cd0-7133-49b1-a95c-a444db064b40
 State: Running
 ```
 
 See sample output from `snaptel task watch <task_id>`
 
 ```
-$ snaptel task watch 156366f2-e497-4c10-ad22-560fc71986af
+$ snaptel task watch 44c01cd0-7133-49b1-a95c-a444db064b40
 
-Watching Task (156366f2-e497-4c10-ad22-560fc71986af):
-NAMESPACE                        DATA            TIMESTAMP                                       SOURCE
-/intel/pcm/EXEC                  0.0138          2015-12-02 08:19:46.001151927 -0500 EST         gklab-108-166
-/intel/pcm/FREQ                  0.00639         2015-12-02 08:19:46.001150464 -0500 EST         gklab-108-166
-/intel/pcm/INST                  379             2015-12-02 08:19:46.001150975 -0500 EST         gklab-108-166
-/intel/pcm/INSTnom               0.0276          2015-12-02 08:19:46.001147704 -0500 EST         gklab-108-166
-/intel/pcm/INSTnom%              0.691           2015-12-02 08:19:46.001148234 -0500 EST         gklab-108-166
-/intel/pcm/IPC                   2.16            2015-12-02 08:19:46.001148772 -0500 EST         gklab-108-166
-/intel/pcm/L2HIT                 0.483           2015-12-02 08:19:46.00114933 -0500 EST          gklab-108-166
-/intel/pcm/L2MISS                0.719           2015-12-02 08:19:46.001151493 -0500 EST         gklab-108-166
-/intel/pcm/L3HIT                 0.423           2015-12-02 08:19:46.001152449 -0500 EST         gklab-108-166
-/intel/pcm/L3MISS                0.415           2015-12-02 08:19:46.001144495 -0500 EST         gklab-108-166
-/intel/pcm/PhysIPC               4.33            2015-12-02 08:19:46.001145292 -0500 EST         gklab-108-166
-/intel/pcm/PhysIPC%              108             2015-12-02 08:19:46.001149828 -0500 EST         gklab-108-166
-/intel/pcm/Proc_Energy_Joules    8.46            2015-12-02 08:19:46.001145857 -0500 EST         gklab-108-166
-/intel/pcm/READ                  0.084           2015-12-02 08:19:46.00114662 -0500 EST          gklab-108-166
-/intel/pcm/SKT0                  8.46            2015-12-02 08:19:46.001152938 -0500 EST         gklab-108-166
-/intel/pcm/TEMP                  70              2015-12-02 08:19:46.001153401 -0500 EST         gklab-108-166
-/intel/pcm/TIME_ticks           3430            2015-12-02 08:19:46.001153955 -0500 EST         gklab-108-166
-/intel/pcm/WRITE                 0.0563          2015-12-02 08:19:46.00114718 -0500 EST          gklab-108-166
+Watching Task (44c01cd0-7133-49b1-a95c-a444db064b40):
+NAMESPACE 						 DATA 		 TIMESTAMP
+/intel/pcm/SKT0_Core_C-State/C0res% 			 1.13 		 2017-04-18 14:52:05.410848537 +0200 CEST
+/intel/pcm/SKT0_Core_C-State/C1res% 			 26 		 2017-04-18 14:52:05.410835819 +0200 CEST
+/intel/pcm/SKT0_Core_C-State/C3res% 			 0.00878 	 2017-04-18 14:52:05.410855565 +0200 CEST
+/intel/pcm/SKT0_Core_C-State/C6res% 			 0.361 		 2017-04-18 14:52:05.410829547 +0200 CEST
+/intel/pcm/SKT0_Core_C-State/C7res% 			 72.5 		 2017-04-18 14:52:05.410842087 +0200 CEST
+/intel/pcm/SKT0_Package_C-State/C10res% 		 0 		 2017-04-18 14:52:05.41061602 +0200 CEST
+/intel/pcm/SKT0_Package_C-State/C2res% 			 26.6 		 2017-04-18 14:52:05.410630665 +0200 CEST
+/intel/pcm/SKT0_Package_C-State/C3res% 			 0 		 2017-04-18 14:52:05.410623662 +0200 CEST
+/intel/pcm/SKT0_Package_C-State/C6res% 			 0 		 2017-04-18 14:52:05.410660845 +0200 CEST
+/intel/pcm/SKT0_Package_C-State/C7res% 			 0 		 2017-04-18 14:52:05.410637857 +0200 CEST
+/intel/pcm/SKT0_Package_C-State/C8res% 			 0 		 2017-04-18 14:52:05.410644744 +0200 CEST
+/intel/pcm/SKT0_Package_C-State/C9res% 			 0 		 2017-04-18 14:52:05.410653227 +0200 CEST
+/intel/pcm/Socket0/AFREQ 				 0.383 		 2017-04-18 14:52:05.410772622 +0200 CEST
+/intel/pcm/Socket0/EXEC 				 0.005 		 2017-04-18 14:52:05.410818398 +0200 CEST
+/intel/pcm/Socket0/FREQ 				 0.00432 	 2017-04-18 14:52:05.410797095 +0200 CEST
+/intel/pcm/Socket0/IPC 					 1.16 		 2017-04-18 14:52:05.410767806 +0200 CEST
+/intel/pcm/Socket0/L2HIT 				 0.57 		 2017-04-18 14:52:05.410782617 +0200 CEST
+/intel/pcm/Socket0/L2MISS 				 0.472 		 2017-04-18 14:52:05.410802963 +0200 CEST
+/intel/pcm/Socket0/L2MPI 				 0.00346 	 2017-04-18 14:52:05.410823254 +0200 CEST
+/intel/pcm/Socket0/L3HIT 				 0.719 		 2017-04-18 14:52:05.410787351 +0200 CEST
+/intel/pcm/Socket0/L3MISS 				 0.12 		 2017-04-18 14:52:05.410813474 +0200 CEST
+/intel/pcm/Socket0/L3MPI 				 0.00088 	 2017-04-18 14:52:05.410763201 +0200 CEST
+/intel/pcm/Socket0/READ 				 0.651 		 2017-04-18 14:52:05.410777707 +0200 CEST
+/intel/pcm/Socket0/TEMP 				 68 		 2017-04-18 14:52:05.410807757 +0200 CEST
+/intel/pcm/Socket0/WRITE 				 0.0908 	 2017-04-18 14:52:05.410792212 +0200 CEST
+/intel/pcm/System/ACYC 					 118 		 2017-04-18 14:52:05.410506608 +0200 CEST
+/intel/pcm/System/AFREQ 				 0.383 		 2017-04-18 14:52:05.410534795 +0200 CEST
+/intel/pcm/System/EXEC 					 0.005 		 2017-04-18 14:52:05.410603378 +0200 CEST
+/intel/pcm/System/FREQ 					 0.00432 	 2017-04-18 14:52:05.410567768 +0200 CEST
+/intel/pcm/System/INST 					 136 		 2017-04-18 14:52:05.410524764 +0200 CEST
+/intel/pcm/System/INSTnom 				 0.01 		 2017-04-18 14:52:05.410587925 +0200 CEST
+/intel/pcm/System/INSTnom% 				 0.25 		 2017-04-18 14:52:05.410558073 +0200 CEST
+/intel/pcm/System/IPC 					 1.16 		 2017-04-18 14:52:05.410501595 +0200 CEST
+/intel/pcm/System/L2HIT 				 0.57 		 2017-04-18 14:52:05.410539947 +0200 CEST
+/intel/pcm/System/L2MISS 				 0.472 		 2017-04-18 14:52:05.410598547 +0200 CEST
+/intel/pcm/System/L2MPI 				 0.00346 	 2017-04-18 14:52:05.410578095 +0200 CEST
+/intel/pcm/System/L3HIT 				 0.719 		 2017-04-18 14:52:05.410582892 +0200 CEST
+/intel/pcm/System/L3MISS 				 0.12 		 2017-04-18 14:52:05.410496412 +0200 CEST
+/intel/pcm/System/L3MPI 				 0.00088 	 2017-04-18 14:52:05.410593533 +0200 CEST
+/intel/pcm/System/PhysIPC 				 2.32 		 2017-04-18 14:52:05.410563088 +0200 CEST
+/intel/pcm/System/PhysIPC% 				 57.9 		 2017-04-18 14:52:05.410490594 +0200 CEST
+/intel/pcm/System/READ 					 0.651 		 2017-04-18 14:52:05.410572346 +0200 CEST
+/intel/pcm/System/TIME_ticks 				 3410 		 2017-04-18 14:52:05.410608886 +0200 CEST
+/intel/pcm/System/WRITE 				 0.0908 	 2017-04-18 14:52:05.410529645 +0200 CEST
+/intel/pcm/System_Core_C-States/C0res% 			 1.13 		 2017-04-18 14:52:05.410731258 +0200 CEST
+/intel/pcm/System_Core_C-States/C1res% 			 26 		 2017-04-18 14:52:05.410723708 +0200 CEST
+/intel/pcm/System_Core_C-States/C3res% 			 0.00878 	 2017-04-18 14:52:05.41075228 +0200 CEST
+/intel/pcm/System_Core_C-States/C6res% 			 0.361 		 2017-04-18 14:52:05.410738707 +0200 CEST
+/intel/pcm/System_Core_C-States/C7res% 			 72.5 		 2017-04-18 14:52:05.410745516 +0200 CEST
+/intel/pcm/System_Pack_C-States/C10res% 		 0 		 2017-04-18 14:52:05.410696658 +0200 CEST
+/intel/pcm/System_Pack_C-States/C2res% 			 26.6 		 2017-04-18 14:52:05.410716662 +0200 CEST
+/intel/pcm/System_Pack_C-States/C3res% 			 0 		 2017-04-18 14:52:05.410667741 +0200 CEST
+/intel/pcm/System_Pack_C-States/C6res% 			 0 		 2017-04-18 14:52:05.410674519 +0200 CEST
+/intel/pcm/System_Pack_C-States/C7res% 			 0 		 2017-04-18 14:52:05.410703432 +0200 CEST
+/intel/pcm/System_Pack_C-States/C8res% 			 0 		 2017-04-18 14:52:05.410689679 +0200 CEST
+/intel/pcm/System_Pack_C-States/C9res% 			 0 		 2017-04-18 14:52:05.410709942 +0200 CEST
+/intel/pcm/System_Pack_C-States/Proc_Energy_Joules 	 3.07 		 2017-04-18 14:52:05.410682756 +0200 CEST
+
 ```
 (Keys `ctrl+c` terminate task watcher)
 
@@ -220,9 +239,9 @@ These data are published to file and stored there (in this example in /tmp/publi
 
 Stop task:
 ```
-$ snaptel task stop 156366f2-e497-4c10-ad22-560fc71986af
+$ snaptel task stop 44c01cd0-7133-49b1-a95c-a444db064b40
 Task stopped:
-ID: 156366f2-e497-4c10-ad22-560fc71986af
+ID: 44c01cd0-7133-49b1-a95c-a444db064b40
 ```
 
 ### Roadmap
