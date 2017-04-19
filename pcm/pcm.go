@@ -44,10 +44,12 @@ const (
 	// Name of plugin
 	name = "pcm"
 	// Version of plugin
-	version = 10
+	version = 11
 	// Type of plugin
 	pluginType = plugin.CollectorPluginType
 )
+
+var fieldsToSkip = 2
 
 func Meta() *plugin.PluginMeta {
 	return plugin.NewPluginMeta(name, version, pluginType, []string{plugin.SnapGOBContentType}, []string{plugin.SnapGOBContentType})
@@ -182,20 +184,30 @@ func (pcm *PCM) parse(reader io.Reader) {
 	// read the data from stdout
 	scanner := bufio.NewScanner(reader)
 	first := true
+	header := []string{}
 	for scanner.Scan() {
 		if first {
 			first = false
+			currentKey := ""
+			keys := strings.Split(strings.TrimSuffix(scanner.Text(), ";"), ";")
+			for _, key := range keys {
+				if key != "" {
+					currentKey = key
+				}
+				header = append(header, currentKey)
+			}
 			continue
 		}
 		if len(pcm.keys) == 0 {
 			pcm.mutex.Lock()
 			keys := strings.Split(strings.TrimSuffix(scanner.Text(), ";"), ";")
 			//skip the date and time fields
-			pcm.keys = make([]string, len(keys[2:]))
-			for i, k := range keys[2:] {
+			pcm.keys = make([]string, len(keys[fieldsToSkip:]))
+			for i, k := range keys[fieldsToSkip:] {
 				// removes all spaces from metric key
 				metricKey := ns.ReplaceNotAllowedCharsInNamespacePart(k)
-				pcm.keys[i] = fmt.Sprintf("/intel/pcm/%s", metricKey)
+				metricComponent := ns.ReplaceNotAllowedCharsInNamespacePart(header[i+fieldsToSkip])
+				pcm.keys[i] = fmt.Sprintf("/intel/pcm/%s/%s", metricComponent, metricKey)
 			}
 			pcm.mutex.Unlock()
 			continue
@@ -203,7 +215,7 @@ func (pcm *PCM) parse(reader io.Reader) {
 
 		pcm.mutex.Lock()
 		datal := strings.Split(strings.TrimSuffix(scanner.Text(), ";"), ";")
-		for i, d := range datal[2:] {
+		for i, d := range datal[fieldsToSkip:] {
 			v, err := strconv.ParseFloat(strings.TrimSpace(d), 64)
 			if err == nil {
 				pcm.data[pcm.keys[i]] = v

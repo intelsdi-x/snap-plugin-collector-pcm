@@ -7,22 +7,7 @@
     "workflow": {
         "collect": {
             "metrics": {
-                "/intel/pcm/IPC": {},
-                "/intel/pcm/L2HIT": {},
-                "/intel/pcm/L2MISS": {},
-                "/intel/pcm/EXEC": {},
-                "/intel/pcm/FREQ": {},
-                "/intel/pcm/INST": {},
-                "/intel/pcm/INSTnom": {},
-                "/intel/pcm/INSTnom%": {},
-                "/intel/pcm/L3HIT": {},
-                "/intel/pcm/L3MISS": {},
-                "/intel/pcm/PhysIPC": {},
-                "/intel/pcm/PhysIPC%": {},
-                "/intel/pcm/READ": {},
-                "/intel/pcm/TEMP": {},
-                "/intel/pcm/TIME_ticks": {},
-                "/intel/pcm/WRITE": {}
+                "/intel/pcm/*": {}
             },
             "config": {},            
             "process": null,

@@ -32,36 +32,70 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-var mockCmdOut = `System;;;;;;;;;;;;;;;;;;;;;System Core C-States;;;;System Pack C-States;;;Socket0;;;;;;;;;;;;;SKT0 Core C-State;;;;SKT0 Package C-State;;;
-Date;Time;EXEC;IPC;FREQ;AFREQ;L3MISS;L2MISS;L3HIT;L2HIT;L3MPI;L2MPI;READ;WRITE;INST;ACYC;TIME(ticks);PhysIPC;PhysIPC%;INSTnom;INSTnom%;C0res%;C1res%;C3res%;C6res%;C3res%;C6res%;C7res%;EXEC;IPC;FREQ;AFREQ;L3MISS;L2MISS;L3HIT;L2HIT;L3MPI;L2MPI;READ;WRITE;TEMP;C0res%;C1res%;C3res%;C6res%;C3res%;C6res%;C7res%;
-2016-11-02;14:10:27.600;0.0175;1.13;0.0155;0.84;0.0925;0.617;0.85;0.335;0.000237;0.00158;0.0361;0.0157;391;347;2.8e+03;2.26;56.4;0.0349;0.873;1.85;2.13;1.14;94.9;0.382;76.6;0;0.0175;1.13;0.0155;0.84;0.0925;0.617;0.85;0.335;0.000237;0.00158;0.0361;0.0157;N/A;1.85;2.13;1.14;94.9;0.382;76.6;0;
+var mockCmdOut = `System;;;;;;;;;;;;;;;;;;;;;System Core C-States;;;;;System Pack C-States;;;;;;;;Socket0;;;;;;;;;;;;;SKT0 Core C-State;;;;;SKT0 Package C-State;;;;;;;Proc Energy (Joules);
+Date;Time;EXEC;IPC;FREQ;AFREQ;L3MISS;L2MISS;L3HIT;L2HIT;L3MPI;L2MPI;READ;WRITE;INST;ACYC;TIME(ticks);PhysIPC;PhysIPC%;INSTnom;INSTnom%;C0res%;C1res%;C3res%;C6res%;C7res%;C2res%;C3res%;C6res%;C7res%;C8res%;C9res%;C10res%;Proc Energy (Joules);EXEC;IPC;FREQ;AFREQ;L3MISS;L2MISS;L3HIT;L2HIT;L3MPI;L2MPI;READ;WRITE;TEMP;C0res%;C1res%;C3res%;C6res%;C7res%;C2res%;C3res%;C6res%;C7res%;C8res%;C9res%;C10res%;SKT0;
+2017-04-14;13:52:31.359;0.00245;0.589;0.00415;0.262;0.249;0.666;0.613;0.439;0.00372;0.00997;0.761;0.134;66.8;113;3.41e+03;1.18;29.5;0.0049;0.122;1.59;12.6;0.0181;1.64;84.1;50.1;0;0;0;0;0;0;2.37;0.00245;0.589;0.00415;0.262;0.249;0.666;0.613;0.439;0.00372;0.00997;0.761;0.134;69;1.59;12.6;0.0181;1.64;84.1;50.1;0;0;0;0;0;0;2.37;
 `
 
 var refMap = map[string]float64{
-	"/intel/pcm/L3MPI":      0.000237,
-	"/intel/pcm/INST":       391,
-	"/intel/pcm/ACYC":       347,
-	"/intel/pcm/PhysIPC%":   56.4,
-	"/intel/pcm/C0res%":     1.85,
-	"/intel/pcm/C6res%":     76.6,
-	"/intel/pcm/EXEC":       0.0175,
-	"/intel/pcm/L2MISS":     0.617,
-	"/intel/pcm/C7res%":     0,
-	"/intel/pcm/AFREQ":      0.84,
-	"/intel/pcm/L3HIT":      0.85,
-	"/intel/pcm/L2MPI":      0.00158,
-	"/intel/pcm/READ":       0.0361,
-	"/intel/pcm/WRITE":      0.0157,
-	"/intel/pcm/TIME_ticks": 2800,
-	"/intel/pcm/INSTnom%":   0.873,
-	"/intel/pcm/IPC":        1.13,
-	"/intel/pcm/L3MISS":     0.0925,
-	"/intel/pcm/PhysIPC":    2.26,
-	"/intel/pcm/INSTnom":    0.0349,
-	"/intel/pcm/C1res%":     2.13,
-	"/intel/pcm/C3res%":     0.382,
-	"/intel/pcm/FREQ":       0.0155,
-	"/intel/pcm/L2HIT":      0.335,
+	"/intel/pcm/System/L2MPI":                            0.00997,
+	"/intel/pcm/SKT0_Core_C-State/C7res%":                84.1,
+	"/intel/pcm/SKT0_Package_C-State/C3res%":             0,
+	"/intel/pcm/System/FREQ":                             0.00415,
+	"/intel/pcm/System_Pack_C-States/Proc_Energy_Joules": 2.37,
+	"/intel/pcm/System/IPC":                              0.589,
+	"/intel/pcm/System/INSTnom%":                         0.122,
+	"/intel/pcm/Socket0/FREQ":                            0.00415,
+	"/intel/pcm/Socket0/L3MISS":                          0.249,
+	"/intel/pcm/System/AFREQ":                            0.262,
+	"/intel/pcm/Socket0/L2HIT":                           0.439,
+	"/intel/pcm/System/ACYC":                             113,
+	"/intel/pcm/Socket0/IPC":                             0.589,
+	"/intel/pcm/Proc_Energy_Joules/SKT0":                 2.37,
+	"/intel/pcm/System_Core_C-States/C3res%":             0.0181,
+	"/intel/pcm/SKT0_Core_C-State/C1res%":                12.6,
+	"/intel/pcm/System/INSTnom":                          0.0049,
+	"/intel/pcm/System_Core_C-States/C6res%":             1.64,
+	"/intel/pcm/System_Pack_C-States/C2res%":             50.1,
+	"/intel/pcm/Socket0/L3MPI":                           0.00372,
+	"/intel/pcm/SKT0_Core_C-State/C6res%":                1.64,
+	"/intel/pcm/System_Pack_C-States/C3res%":             0,
+	"/intel/pcm/SKT0_Core_C-State/C3res%":                0.0181,
+	"/intel/pcm/System_Pack_C-States/C6res%":             0,
+	"/intel/pcm/System_Pack_C-States/C8res%":             0,
+	"/intel/pcm/Socket0/WRITE":                           0.134,
+	"/intel/pcm/SKT0_Package_C-State/C7res%":             0,
+	"/intel/pcm/SKT0_Package_C-State/C10res%":            0,
+	"/intel/pcm/System/READ":                             0.761,
+	"/intel/pcm/System/PhysIPC":                          1.18,
+	"/intel/pcm/Socket0/AFREQ":                           0.262,
+	"/intel/pcm/Socket0/L3HIT":                           0.613,
+	"/intel/pcm/Socket0/READ":                            0.761,
+	"/intel/pcm/System/L3HIT":                            0.613,
+	"/intel/pcm/System_Pack_C-States/C7res%":             0,
+	"/intel/pcm/Socket0/L2MPI":                           0.00997,
+	"/intel/pcm/Socket0/TEMP":                            69,
+	"/intel/pcm/System/EXEC":                             0.00245,
+	"/intel/pcm/System/L3MISS":                           0.249,
+	"/intel/pcm/Socket0/L2MISS":                          0.666,
+	"/intel/pcm/SKT0_Package_C-State/C8res%":             0,
+	"/intel/pcm/SKT0_Package_C-State/C9res%":             0,
+	"/intel/pcm/System/WRITE":                            0.134,
+	"/intel/pcm/System/TIME_ticks":                       3410,
+	"/intel/pcm/System_Core_C-States/C1res%":             12.6,
+	"/intel/pcm/System_Core_C-States/C7res%":             84.1,
+	"/intel/pcm/Socket0/EXEC":                            0.00245,
+	"/intel/pcm/System/L3MPI":                            0.00372,
+	"/intel/pcm/System/PhysIPC%":                         29.5,
+	"/intel/pcm/System_Core_C-States/C0res%":             1.59,
+	"/intel/pcm/SKT0_Core_C-State/C0res%":                1.59,
+	"/intel/pcm/System/L2HIT":                            0.439,
+	"/intel/pcm/System/INST":                             66.8,
+	"/intel/pcm/System_Pack_C-States/C9res%":             0,
+	"/intel/pcm/System_Pack_C-States/C10res%":            0,
+	"/intel/pcm/SKT0_Package_C-State/C2res%":             50.1,
+	"/intel/pcm/System/L2MISS":                           0.666,
+	"/intel/pcm/SKT0_Package_C-State/C6res%":             0,
 }
 
 func TestPCMPlugin(t *testing.T) {
@@ -100,8 +134,8 @@ func TestPCMPlugin(t *testing.T) {
 
 			So(func() { pcm.CollectMetrics(mockMts) }, ShouldNotPanic)
 			result, err := pcm.CollectMetrics(mockMts)
-			So(len(result), ShouldEqual, 24)
 			So(err, ShouldBeNil)
+			So(len(result), ShouldEqual, len(refMap))
 
 			m := make(map[string]float64, len(result))
 
@@ -115,7 +149,7 @@ func TestPCMPlugin(t *testing.T) {
 		Convey("Get metric types", func() {
 			mts, err := pcm.GetMetricTypes(plugin.ConfigType{})
 			So(err, ShouldBeNil)
-			So(len(mts), ShouldEqual, 46)
+			So(len(mts), ShouldEqual, len(refMap))
 
 			namespaces := []string{}
 			for _, m := range mts {
